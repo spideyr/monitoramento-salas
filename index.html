@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoramento de Salas</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    padding: 15px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.container {
+    background: #1c1c1c;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+input, textarea, button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+}
+
+input, textarea {
+    background: #2b2b2b;
+    color: white;
+}
+
+button {
+    background: #e50914;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #b20710;
+}
+
+.registro {
+    background: #222;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+.excluir {
+    background: #444;
+    margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎬 Monitoramento de Salas</h1>
+
+<div class="container">
+    <label>Sala:</label>
+    <input type="text" id="sala" placeholder="Ex: Sala 3">
+
+    <label>Poltronas quebradas:</label>
+    <input type="text" id="poltronas" placeholder="Ex: A12, B5, C8">
+
+    <label>Números faltando:</label>
+    <input type="text" id="faltando" placeholder="Ex: D10, D11">
+
+    <label>Observações:</label>
+    <textarea id="obs" placeholder="Detalhes adicionais..."></textarea>
+
+    <button onclick="salvar()">Salvar Registro</button>
+</div>
+
+<div id="lista"></div>
+
+<script>
+let registros = JSON.parse(localStorage.getItem("registrosCinema")) || [];
+
+function salvar() {
+    const sala = document.getElementById("sala").value;
+    const poltronas = document.getElementById("poltronas").value;
+    const faltando = document.getElementById("faltando").value;
+    const obs = document.getElementById("obs").value;
+
+    if (!sala) {
+        alert("Digite o número da sala!");
+        return;
+    }
+
+    const novoRegistro = { sala, poltronas, faltando, obs };
+    registros.push(novoRegistro);
+
+    localStorage.setItem("registrosCinema", JSON.stringify(registros));
+
+    limparCampos();
+    mostrar();
+}
+
+function mostrar() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    registros.forEach((registro, index) => {
+        lista.innerHTML += `
+            <div class="registro">
+                <strong>${registro.sala}</strong><br>
+                💺 Quebradas: ${registro.poltronas || "Nenhuma"}<br>
+                🔢 Faltando: ${registro.faltando || "Nenhum"}<br>
+                📝 Obs: ${registro.obs || "Sem observações"}<br>
+                <button class="excluir" onclick="excluir(${index})">Excluir</button>
+            </div>
+        `;
+    });
+}
+
+function excluir(index) {
+    registros.splice(index, 1);
+    localStorage.setItem("registrosCinema", JSON.stringify(registros));
+    mostrar();
+}
+
+function limparCampos() {
+    document.getElementById("sala").value = "";
+    document.getElementById("poltronas").value = "";
+    document.getElementById("faltando").value = "";
+    document.getElementById("obs").value = "";
+}
+
+mostrar();
+</script>
+
+</body>
+</html>
