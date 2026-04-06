@@ -3,138 +3,246 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitoramento de Salas</title>
+<title>Monitoramento</title>
+
+<meta name="theme-color" content="#e50914">
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
-    padding: 15px;
+font-family: Arial;
+background: #0f0f0f;
+color: white;
+padding: 8px;
+max-width: 380px;
+margin: auto;
 }
 
 h1 {
-    text-align: center;
+text-align: center;
+color: #e50914;
+font-size: 18px;
+margin-bottom: 8px;
 }
 
 .container {
-    background: #1c1c1c;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+background: #1c1c1c;
+padding: 8px;
+border-radius: 8px;
+margin-bottom: 8px;
 }
 
-input, textarea, button {
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
+label {
+font-size: 12px;
+margin-top: 4px;
+display: block;
 }
 
-input, textarea {
-    background: #2b2b2b;
-    color: white;
+select, input, textarea, button {
+width: 100%;
+margin-top: 4px;
+padding: 6px;
+border-radius: 5px;
+border: none;
+font-size: 13px;
+}
+
+input, select, textarea {
+background: #2b2b2b;
+color: white;
+}
+
+textarea {
+resize: none;
+height: 50px;
 }
 
 button {
-    background: #e50914;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #b20710;
+background: #e50914;
+color: white;
+font-weight: bold;
+font-size: 13px;
 }
 
 .registro {
-    background: #222;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 8px;
+background: #1a1a1a;
+padding: 8px;
+margin-top: 6px;
+border-radius: 6px;
+border-left: 3px solid #e50914;
+font-size: 12px;
 }
 
-.excluir {
-    background: #444;
-    margin-top: 5px;
+.topo {
+display: flex;
+flex-direction: column;
+font-size: 11px;
+margin-bottom: 4px;
+}
+
+.topo strong {
+font-size: 13px;
+}
+
+.acoes button {
+margin-top: 4px;
+background: #333;
+font-size: 11px;
+padding: 5px;
+}
+
+.filtro {
+margin-bottom: 6px;
+font-size: 13px;
+padding: 6px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎬 Monitoramento de Salas</h1>
+<h1>🎬 Monitoramento</h1>
 
 <div class="container">
-    <label>Sala:</label>
-    <input type="text" id="sala" placeholder="Ex: Sala 3">
 
-    <label>Poltronas quebradas:</label>
-    <input type="text" id="poltronas" placeholder="Ex: A12, B5, C8">
+<label>Sala</label>
+<select id="sala">
+<option value=""></option>
+<option>Sala 1</option>
+<option>Sala 2</option>
+<option>Sala 3</option>
+<option>Sala 4</option>
+</select>
 
-    <label>Números faltando:</label>
-    <input type="text" id="faltando" placeholder="Ex: D10, D11">
+<label>Fileira</label>
+<input type="text" id="fileira">
 
-    <label>Observações:</label>
-    <textarea id="obs" placeholder="Detalhes adicionais..."></textarea>
+<label>Poltrona</label>
+<input type="number" id="poltrona">
 
-    <button onclick="salvar()">Salvar Registro</button>
+<label>Problema</label>
+<select id="problema">
+<option>Sem Número</option>
+<option>Trocar Braço</option>
+<option>Poltrona Rasgada</option>
+<option>Trocar Poltrona</option>
+<option>Trocar Apoio Completo de Braço</option>
+</select>
+
+<label>Observações</label>
+<textarea id="obs"></textarea>
+
+<button onclick="salvar()">Salvar</button>
+<button onclick="limparTudo()">Limpar Tudo</button>
+
 </div>
+
+<input class="filtro" type="text" id="filtro" oninput="mostrar()">
 
 <div id="lista"></div>
 
 <script>
-let registros = JSON.parse(localStorage.getItem("registrosCinema")) || [];
+let registros = JSON.parse(localStorage.getItem("cinema")) || [];
+let editIndex = null;
 
 function salvar() {
-    const sala = document.getElementById("sala").value;
-    const poltronas = document.getElementById("poltronas").value;
-    const faltando = document.getElementById("faltando").value;
-    const obs = document.getElementById("obs").value;
+const sala = document.getElementById("sala").value;
+const fileira = document.getElementById("fileira").value.toUpperCase();
+const poltrona = document.getElementById("poltrona").value;
+const problema = document.getElementById("problema").value;
+const obs = document.getElementById("obs").value;
 
-    if (!sala) {
-        alert("Digite o número da sala!");
-        return;
-    }
+if (!sala || !fileira || !poltrona) return alert("Preencha");
 
-    const novoRegistro = { sala, poltronas, faltando, obs };
-    registros.push(novoRegistro);
+const data = new Date().toLocaleString("pt-BR");
 
-    localStorage.setItem("registrosCinema", JSON.stringify(registros));
+const registro = {
+sala,
+assento: fileira + poltrona,
+problema,
+obs,
+data
+};
 
-    limparCampos();
-    mostrar();
+if (editIndex !== null) {
+registros[editIndex] = registro;
+editIndex = null;
+} else {
+registros.push(registro);
+}
+
+registros.sort((a, b) => a.sala.localeCompare(b.sala));
+
+localStorage.setItem("cinema", JSON.stringify(registros));
+
+limparCampos();
+mostrar();
 }
 
 function mostrar() {
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
+const lista = document.getElementById("lista");
+const filtro = document.getElementById("filtro").value.toLowerCase();
 
-    registros.forEach((registro, index) => {
-        lista.innerHTML += `
-            <div class="registro">
-                <strong>${registro.sala}</strong><br>
-                💺 Quebradas: ${registro.poltronas || "Nenhuma"}<br>
-                🔢 Faltando: ${registro.faltando || "Nenhum"}<br>
-                📝 Obs: ${registro.obs || "Sem observações"}<br>
-                <button class="excluir" onclick="excluir(${index})">Excluir</button>
-            </div>
-        `;
-    });
+lista.innerHTML = "";
+
+registros
+.filter(r => r.sala.toLowerCase().includes(filtro))
+.forEach((r, index) => {
+
+const div = document.createElement("div");
+div.className = "registro";
+
+div.innerHTML = `
+<div class="topo">
+<strong>${r.sala}</strong>
+<span>${r.data}</span>
+</div>
+🎟 ${r.assento}<br>
+⚠ ${r.problema}
+${r.obs ? `<br>📝 ${r.obs}` : ""}
+<div class="acoes">
+<button onclick="editar(${index})">Editar</button>
+<button onclick="excluir(${index})">Excluir</button>
+</div>
+`;
+
+lista.appendChild(div);
+
+});
 }
 
 function excluir(index) {
-    registros.splice(index, 1);
-    localStorage.setItem("registrosCinema", JSON.stringify(registros));
-    mostrar();
+if (confirm("Excluir?")) {
+registros.splice(index, 1);
+localStorage.setItem("cinema", JSON.stringify(registros));
+mostrar();
+}
+}
+
+function editar(index) {
+const r = registros[index];
+
+document.getElementById("sala").value = r.sala;
+document.getElementById("fileira").value = r.assento.charAt(0);
+document.getElementById("poltrona").value = r.assento.slice(1);
+document.getElementById("problema").value = r.problema;
+document.getElementById("obs").value = r.obs || "";
+
+editIndex = index;
 }
 
 function limparCampos() {
-    document.getElementById("sala").value = "";
-    document.getElementById("poltronas").value = "";
-    document.getElementById("faltando").value = "";
-    document.getElementById("obs").value = "";
+document.getElementById("sala").value = "";
+document.getElementById("fileira").value = "";
+document.getElementById("poltrona").value = "";
+document.getElementById("obs").value = "";
+}
+
+function limparTudo() {
+if (confirm("Apagar tudo?")) {
+localStorage.removeItem("cinema");
+registros = [];
+mostrar();
+}
 }
 
 mostrar();
